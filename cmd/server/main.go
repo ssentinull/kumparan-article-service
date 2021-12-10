@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/ssentinull/kumparan-article-service/config"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 	})
 
 	s := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":" + config.ServerPort(),
 		ReadTimeout:  1 * time.Minute,
 		WriteTimeout: 1 * time.Minute,
 	}
