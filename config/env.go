@@ -27,6 +27,10 @@ func init() {
 	return
 }
 
+func Env() string {
+	return fmt.Sprintf("%s", os.Getenv("ENV"))
+}
+
 func ServerPort() string {
 	return fmt.Sprintf("%s", os.Getenv("SERVER_PORT"))
 }
