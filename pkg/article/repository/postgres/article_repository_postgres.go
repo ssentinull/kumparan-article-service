@@ -27,7 +27,8 @@ func (ar *articleRepository) CalculateVectors(ctx context.Context, article *mode
 		"article": utils.Dump(article),
 	})
 
-	query := `UPDATE articles SET title_body_vectors = to_tsvector($1 || ' ' || $2) WHERE id = $3`
+	query := `UPDATE articles SET title_body_vectors = to_tsvector($1 || ' ' || $2),
+		author_vectors = to_tsvector($3) WHERE id = $4`
 	stmt, err := ar.db.PrepareContext(ctx, query)
 	if err != nil {
 		logger.Error(err)
@@ -42,7 +43,7 @@ func (ar *articleRepository) CalculateVectors(ctx context.Context, article *mode
 		}
 	}()
 
-	_, err = stmt.ExecContext(ctx, article.Title, article.Body, article.ID)
+	_, err = stmt.ExecContext(ctx, article.Title, article.Body, article.Author, article.ID)
 	if err != nil {
 		logger.Error(err)
 
