@@ -4,11 +4,13 @@ import (
 	"context"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	_articleRepo "github.com/ssentinull/kumparan-article-service/pkg/article/repository/postgres"
 	"github.com/ssentinull/kumparan-article-service/pkg/model"
 	"github.com/ssentinull/kumparan-article-service/pkg/model/mock"
+	_mockQryParam "github.com/ssentinull/kumparan-article-service/pkg/model/mock/query_param"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -123,4 +125,60 @@ func TestFailedExecInCalculateVectors(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Equal(t, model.ErrBadRequest, err)
+}
+
+func TestSuccessfulReadArticles(t *testing.T) {
+	dbStub, sqlMock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub db connection", err)
+	}
+
+	expectedArticles := []model.Article{
+		{
+			ID: 1, Author: "test author", Title: "test title",
+			Body: "test body", CreatedAt: time.Now(),
+		},
+		{
+			ID: 2, Author: "test author", Title: "test title",
+			Body: "test body", CreatedAt: time.Now(),
+		},
+	}
+
+	mockRows := sqlMock.NewRows([]string{"id", "author", "title", "body", "created_at"}).
+		AddRow(expectedArticles[0].ID, expectedArticles[0].Author, expectedArticles[0].Title,
+			expectedArticles[0].Body, expectedArticles[0].CreatedAt).
+		AddRow(expectedArticles[1].ID, expectedArticles[1].Author, expectedArticles[1].Title,
+			expectedArticles[1].Body, expectedArticles[1].CreatedAt)
+
+	expectedQuery := "SELECT id, author, title, body, created_at FROM articles ORDER BY created_at DESC "
+	sqlMock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).WillReturnRows(mockRows)
+
+	mockQueryParam := new(_mockQryParam.QueryBuilder)
+	mockQueryParam.On("BuildWhereClause").Return("").Once()
+
+	mockRepo := _articleRepo.NewArticleRepository(dbStub)
+	articles, err := mockRepo.Read(context.TODO(), mockQueryParam)
+
+	assert.NoError(t, err)
+	assert.Len(t, articles, len(expectedArticles))
+}
+
+func TestFailedReadArticles(t *testing.T) {
+	dbStub, sqlMock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub db connection", err)
+	}
+
+	expectedQuery := "SELECT id, author, title, body, created_at FROM articles ORDER BY created_at DESC "
+	sqlMock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).WillReturnError(model.ErrInternalServer)
+
+	mockQueryParam := new(_mockQryParam.QueryBuilder)
+	mockQueryParam.On("BuildWhereClause").Return("").Once()
+
+	mockRepo := _articleRepo.NewArticleRepository(dbStub)
+	articles, err := mockRepo.Read(context.TODO(), mockQueryParam)
+
+	assert.Error(t, err)
+	assert.Nil(t, articles)
+	assert.Equal(t, model.ErrInternalServer, err)
 }

@@ -15,11 +15,11 @@ type Article struct {
 
 type ArticleUsecase interface {
 	Create(context.Context, *Article) error
-	Get(context.Context, QueryParam) ([]Article, error)
+	Get(context.Context, QueryBuilder) ([]Article, error)
 }
 
 type ArticleRepository interface {
 	CalculateVectors(context.Context, *Article) error
 	Create(context.Context, *Article) error
-	Read(context.Context, QueryParam) ([]Article, error)
+	Read(context.Context, QueryBuilder) ([]Article, error)
 }

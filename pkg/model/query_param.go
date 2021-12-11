@@ -11,7 +11,7 @@ type QueryBuilder interface {
 	BuildWhereClause() string
 }
 
-func (qp *QueryParam) BuildWhereClause() string {
+func (qp QueryParam) BuildWhereClause() string {
 	if qp.Query == "" && qp.Author == "" {
 		return ""
 	}

@@ -98,7 +98,7 @@ func (ar *articleRepository) Create(ctx context.Context, article *model.Article)
 	return nil
 }
 
-func (ar *articleRepository) Read(ctx context.Context, qp model.QueryParam) ([]model.Article, error) {
+func (ar *articleRepository) Read(ctx context.Context, qp model.QueryBuilder) ([]model.Article, error) {
 	logger := logrus.WithFields(logrus.Fields{
 		"context":    utils.Dump(ctx),
 		"queryParam": qp,
