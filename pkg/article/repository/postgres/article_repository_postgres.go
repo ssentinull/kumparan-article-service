@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -106,21 +105,7 @@ func (ar *articleRepository) Read(ctx context.Context, qp model.QueryParam) ([]m
 
 	baseQuery := "SELECT id, author, title, body, created_at FROM articles "
 	orderQuery := "ORDER BY created_at DESC "
-	filterQuery := " "
-	if qp != (model.QueryParam{}) {
-		filterQuery = "WHERE "
-		if qp.Query != "" {
-			filterQuery += fmt.Sprintf(" title_body_vectors @@ TO_TSQUERY('%s') ", qp.Query)
-		}
-
-		if qp.Query != "" && qp.Author != "" {
-			filterQuery += "OR "
-		}
-
-		if qp.Author != "" {
-			filterQuery += fmt.Sprintf("author_vectors @@ TO_TSQUERY('%s') ", qp.Author)
-		}
-	}
+	filterQuery := qp.BuildWhereClause()
 
 	query := baseQuery + filterQuery + orderQuery
 	rows, err := ar.db.QueryContext(ctx, query)
