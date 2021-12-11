@@ -1,5 +1,6 @@
 package model
 
 type QueryParam struct {
-	Query string
+	Query  string
+	Author string
 }

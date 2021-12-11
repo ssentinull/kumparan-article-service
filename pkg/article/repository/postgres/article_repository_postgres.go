@@ -104,11 +104,22 @@ func (ar *articleRepository) Read(ctx context.Context, qp model.QueryParam) ([]m
 		"queryParam": qp,
 	})
 
-	baseQuery := "SELECT id, author, title, body, created_at FROM articles"
-	orderQuery := " ORDER BY created_at DESC"
+	baseQuery := "SELECT id, author, title, body, created_at FROM articles "
+	orderQuery := "ORDER BY created_at DESC "
 	filterQuery := " "
-	if qp.Query != "" {
-		filterQuery = fmt.Sprintf(" WHERE title_body_vectors @@ TO_TSQUERY('%s')", qp.Query)
+	if qp != (model.QueryParam{}) {
+		filterQuery = "WHERE "
+		if qp.Query != "" {
+			filterQuery += fmt.Sprintf(" title_body_vectors @@ TO_TSQUERY('%s') ", qp.Query)
+		}
+
+		if qp.Query != "" && qp.Author != "" {
+			filterQuery += "OR "
+		}
+
+		if qp.Author != "" {
+			filterQuery += fmt.Sprintf("author_vectors @@ TO_TSQUERY('%s') ", qp.Author)
+		}
 	}
 
 	query := baseQuery + filterQuery + orderQuery
