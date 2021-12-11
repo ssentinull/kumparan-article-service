@@ -45,6 +45,7 @@ func (ar *articleRepository) CalculateVectors(ctx context.Context, article *mode
 	_, err = stmt.ExecContext(ctx, article.Title, article.Body, article.Author, article.ID)
 	if err != nil {
 		logger.Error(err)
+		err = model.ErrBadRequest
 
 		return err
 	}
