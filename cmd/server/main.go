@@ -9,6 +9,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/ssentinull/kumparan-article-service/config"
+	"github.com/ssentinull/kumparan-article-service/db"
+	_articleHndlr "github.com/ssentinull/kumparan-article-service/pkg/article/handler/http"
+	_articleRepo "github.com/ssentinull/kumparan-article-service/pkg/article/repository/postgres"
+	_articleUcase "github.com/ssentinull/kumparan-article-service/pkg/article/usecase"
 )
 
 func initLogger() {
@@ -38,10 +42,11 @@ func init() {
 
 func main() {
 	e := echo.New()
+	db := db.NewDBConn()
 
-	e.GET("/", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, "hello")
-	})
+	articleRepo := _articleRepo.NewArticleRepository(db)
+	articleUsecase := _articleUcase.NewArticleUsecase(articleRepo)
+	_articleHndlr.NewArticleHandler(e, articleUsecase)
 
 	s := &http.Server{
 		Addr:         ":" + config.ServerPort(),
