@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
+	github.com/bxcodec/faker/v3 v3.6.0 // indirect
 	github.com/golang-migrate/migrate/v4 v4.15.1
 	github.com/joho/godotenv v1.4.0
 	github.com/labstack/echo/v4 v4.6.1
