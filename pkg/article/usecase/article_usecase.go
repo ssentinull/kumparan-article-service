@@ -19,12 +19,21 @@ func NewArticleUsecase(ar model.ArticleRepository) model.ArticleUsecase {
 }
 
 func (au *articleUsecase) Create(ctx context.Context, article *model.Article) error {
+	logger := logrus.WithFields(logrus.Fields{
+		"context": utils.Dump(ctx),
+		"article": utils.Dump(article),
+	})
+
 	err := au.articleRepository.Create(ctx, article)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{
-			"context": utils.Dump(ctx),
-			"article": utils.Dump(article),
-		}).Error(err)
+		logger.Error(err)
+
+		return err
+	}
+
+	err = au.articleRepository.CalculateVectors(ctx, article)
+	if err != nil {
+		logger.Error(err)
 
 		return err
 	}

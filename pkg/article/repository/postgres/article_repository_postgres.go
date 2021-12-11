@@ -20,13 +20,45 @@ func NewArticleRepository(db *sql.DB) model.ArticleRepository {
 	}
 }
 
+func (ar *articleRepository) CalculateVectors(ctx context.Context, article *model.Article) error {
+	logger := logrus.WithFields(logrus.Fields{
+		"context": utils.Dump(ctx),
+		"article": utils.Dump(article),
+	})
+
+	query := `UPDATE articles SET title_body_vectors = to_tsvector($1 || ' ' || $2) WHERE id = $3`
+	stmt, err := ar.db.PrepareContext(ctx, query)
+	if err != nil {
+		logger.Error(err)
+
+		return err
+	}
+
+	defer func() {
+		err = stmt.Close()
+		if err != nil {
+			logger.Error(err)
+		}
+	}()
+
+	_, err = stmt.ExecContext(ctx, article.Title, article.Body, article.ID)
+	if err != nil {
+		logger.Error(err)
+
+		return err
+	}
+
+	return nil
+}
+
 func (ar *articleRepository) Create(ctx context.Context, article *model.Article) error {
 	logger := logrus.WithFields(logrus.Fields{
 		"context": utils.Dump(ctx),
 		"article": utils.Dump(article),
 	})
 
-	query := "INSERT INTO articles (author, title, body, created_at) VALUES ($1, $2, $3, $4)"
+	query := `INSERT INTO articles (author, title, body, created_at) 
+		VALUES ($1, $2, $3, $4) RETURNING id`
 	stmt, err := ar.db.PrepareContext(ctx, query)
 	if err != nil {
 		logger.Error(err)
@@ -48,8 +80,9 @@ func (ar *articleRepository) Create(ctx context.Context, article *model.Article)
 		return err
 	}
 
+	lastInsertID := int64(0)
 	now := time.Now().In(jkt)
-	_, err = stmt.ExecContext(ctx, article.Author, article.Title, article.Body, now)
+	err = stmt.QueryRowContext(ctx, article.Author, article.Title, article.Body, now).Scan(&lastInsertID)
 	if err != nil {
 		logger.Error(err)
 		err = model.ErrBadRequest
@@ -57,6 +90,7 @@ func (ar *articleRepository) Create(ctx context.Context, article *model.Article)
 		return err
 	}
 
+	article.ID = lastInsertID
 	article.CreatedAt = now
 
 	return nil

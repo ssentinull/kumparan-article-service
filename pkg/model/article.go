@@ -19,6 +19,7 @@ type ArticleUsecase interface {
 }
 
 type ArticleRepository interface {
+	CalculateVectors(context.Context, *Article) error
 	Create(context.Context, *Article) error
 	Read(context.Context) ([]Article, error)
 }
