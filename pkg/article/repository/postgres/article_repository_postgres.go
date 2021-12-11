@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -96,9 +97,20 @@ func (ar *articleRepository) Create(ctx context.Context, article *model.Article)
 	return nil
 }
 
-func (ar *articleRepository) Read(ctx context.Context) ([]model.Article, error) {
-	logger := logrus.WithField("context", utils.Dump(ctx))
-	query := "SELECT id, author, title, body, created_at FROM articles ORDER BY created_at DESC"
+func (ar *articleRepository) Read(ctx context.Context, qp model.QueryParam) ([]model.Article, error) {
+	logger := logrus.WithFields(logrus.Fields{
+		"context":    utils.Dump(ctx),
+		"queryParam": qp,
+	})
+
+	baseQuery := "SELECT id, author, title, body, created_at FROM articles"
+	orderQuery := " ORDER BY created_at DESC"
+	filterQuery := " "
+	if qp.Query != "" {
+		filterQuery = fmt.Sprintf(" WHERE title_body_vectors @@ TO_TSQUERY('%s')", qp.Query)
+	}
+
+	query := baseQuery + filterQuery + orderQuery
 	rows, err := ar.db.QueryContext(ctx, query)
 	if err != nil {
 		logger.Error(err)

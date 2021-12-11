@@ -22,7 +22,8 @@ func NewArticleHandler(e *echo.Echo, au model.ArticleUsecase) {
 }
 
 func (ah *ArticleHandlerHTTP) FetchArticles(c echo.Context) error {
-	articles, err := ah.ArticleUsecase.Get(c.Request().Context())
+	queryParam := model.QueryParam{Query: c.QueryParam("query")}
+	articles, err := ah.ArticleUsecase.Get(c.Request().Context(), queryParam)
 	if err != nil {
 		logrus.Error(err)
 
