@@ -6,3 +6,6 @@ run-migrate-up:
 
 run-migrate-down:
 	@go run cmd/migration/main.go -mode=down
+
+run-test:
+	@go test -v -cover -covermode=atomic ./pkg/...
