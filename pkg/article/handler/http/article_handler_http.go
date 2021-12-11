@@ -26,7 +26,7 @@ func (ah *ArticleHandlerHTTP) PostArticle(c echo.Context) error {
 	if err != nil {
 		logrus.Error(err)
 
-		return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		return c.JSON(http.StatusUnprocessableEntity, err.Error())
 	}
 
 	err = ah.ArticleUsecase.Create(c.Request().Context(), article)
