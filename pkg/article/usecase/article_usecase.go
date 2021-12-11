@@ -31,3 +31,14 @@ func (au *articleUsecase) Create(ctx context.Context, article *model.Article) er
 
 	return nil
 }
+
+func (au *articleUsecase) Get(ctx context.Context) ([]model.Article, error) {
+	articles, err := au.articleRepository.Read(ctx)
+	if err != nil {
+		logrus.WithField("context", utils.Dump(ctx)).Error(err)
+
+		return nil, err
+	}
+
+	return articles, nil
+}

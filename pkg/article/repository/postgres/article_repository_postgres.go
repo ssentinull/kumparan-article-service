@@ -61,3 +61,41 @@ func (ar *articleRepository) Create(ctx context.Context, article *model.Article)
 
 	return nil
 }
+
+func (ar *articleRepository) Read(ctx context.Context) ([]model.Article, error) {
+	logger := logrus.WithField("context", utils.Dump(ctx))
+	query := "SELECT id, author, title, body, created_at FROM articles ORDER BY created_at DESC"
+	rows, err := ar.db.QueryContext(ctx, query)
+	if err != nil {
+		logger.Error(err)
+
+		return nil, err
+	}
+
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			logger.Error(err)
+		}
+	}()
+
+	articles := make([]model.Article, 0)
+	for rows.Next() {
+		var ID sql.NullInt64
+		var author, title, body sql.NullString
+		var createdAt sql.NullTime
+		err = rows.Scan(&ID, &author, &title, &body, &createdAt)
+		if err != nil {
+			logger.Error(err)
+
+			return nil, err
+		}
+
+		articles = append(articles, model.Article{
+			ID: ID.Int64, Author: author.String, Title: title.String,
+			Body: body.String, CreatedAt: createdAt.Time,
+		})
+	}
+
+	return articles, nil
+}

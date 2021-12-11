@@ -15,8 +15,10 @@ type Article struct {
 
 type ArticleUsecase interface {
 	Create(context.Context, *Article) error
+	Get(context.Context) ([]Article, error)
 }
 
 type ArticleRepository interface {
 	Create(context.Context, *Article) error
+	Read(context.Context) ([]Article, error)
 }
