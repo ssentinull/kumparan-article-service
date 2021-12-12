@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/ssentinull/kumparan-article-service/pkg/model"
+	"github.com/ssentinull/kumparan-article-service/pkg/utils/query_param"
 )
 
 type ArticleHandlerHTTP struct {
@@ -22,7 +23,7 @@ func NewArticleHandler(e *echo.Echo, au model.ArticleUsecase) {
 }
 
 func (ah *ArticleHandlerHTTP) FetchArticles(c echo.Context) error {
-	queryParam := model.QueryParam{
+	queryParam := query_param.QueryParam{
 		Query:  c.QueryParam("query"),
 		Author: c.QueryParam("author"),
 	}

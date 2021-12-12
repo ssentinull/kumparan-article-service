@@ -12,7 +12,7 @@ import (
 	"github.com/ssentinull/kumparan-article-service/pkg/model"
 	_mockTime "github.com/ssentinull/kumparan-article-service/pkg/model/mock"
 	_mockCacher "github.com/ssentinull/kumparan-article-service/pkg/model/mock/cacher"
-	_mockQryParam "github.com/ssentinull/kumparan-article-service/pkg/model/mock/query_param"
+	_mockQryBuilder "github.com/ssentinull/kumparan-article-service/pkg/model/mock/query_builder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -164,19 +164,19 @@ func TestSuccessfulQueryInReadArticles(t *testing.T) {
 	expectedQuery := "SELECT id, author, title, body, created_at FROM articles ORDER BY created_at DESC "
 	sqlMock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).WillReturnRows(mockRows)
 
-	mockQueryParam := new(_mockQryParam.QueryBuilder)
-	mockQueryParam.On("BuildWhereClause").Return("").Once()
+	mockQryBuilder := new(_mockQryBuilder.QueryBuilder)
+	mockQryBuilder.On("BuildWhereClause").Return("").Once()
 
 	mockCacher := new(_mockCacher.Cacher)
 	mockCacher.On("Get", mock.AnythingOfType("string")).Return(nil, nil).Once()
 	mockCacher.On("Put", mock.AnythingOfType("string"), mock.AnythingOfType("[]uint8")).Return(nil).Once()
 
 	mockRepo := _articleRepo.NewArticleRepository(dbStub, mockCacher)
-	articles, err := mockRepo.Read(context.TODO(), mockQueryParam)
+	articles, err := mockRepo.Read(context.TODO(), mockQryBuilder)
 
 	assert.NoError(t, err)
 	assert.Len(t, articles, len(expectedArticles))
-	mockQueryParam.AssertExpectations(t)
+	mockQryBuilder.AssertExpectations(t)
 	mockCacher.AssertExpectations(t)
 }
 
@@ -200,18 +200,18 @@ func TestSuccessfulCacheInReadArticles(t *testing.T) {
 	mockCacheReply, err := json.Marshal(expectedArticles)
 	assert.NoError(t, err)
 
-	mockQueryParam := new(_mockQryParam.QueryBuilder)
-	mockQueryParam.On("BuildWhereClause").Return("").Once()
+	mockQryBuilder := new(_mockQryBuilder.QueryBuilder)
+	mockQryBuilder.On("BuildWhereClause").Return("").Once()
 
 	mockCacher := new(_mockCacher.Cacher)
 	mockCacher.On("Get", mock.AnythingOfType("string")).Return(mockCacheReply, nil).Once()
 
 	mockRepo := _articleRepo.NewArticleRepository(dbStub, mockCacher)
-	articles, err := mockRepo.Read(context.TODO(), mockQueryParam)
+	articles, err := mockRepo.Read(context.TODO(), mockQryBuilder)
 
 	assert.NoError(t, err)
 	assert.Len(t, articles, len(expectedArticles))
-	mockQueryParam.AssertExpectations(t)
+	mockQryBuilder.AssertExpectations(t)
 	mockCacher.AssertExpectations(t)
 }
 
@@ -224,19 +224,19 @@ func TestFailedQueryInReadArticles(t *testing.T) {
 	expectedQuery := "SELECT id, author, title, body, created_at FROM articles ORDER BY created_at DESC "
 	sqlMock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).WillReturnError(model.ErrInternalServer)
 
-	mockQueryParam := new(_mockQryParam.QueryBuilder)
-	mockQueryParam.On("BuildWhereClause").Return("").Once()
+	mockQryBuilder := new(_mockQryBuilder.QueryBuilder)
+	mockQryBuilder.On("BuildWhereClause").Return("").Once()
 
 	mockCacher := new(_mockCacher.Cacher)
 	mockCacher.On("Get", mock.AnythingOfType("string")).Return(nil, nil).Once()
 
 	mockRepo := _articleRepo.NewArticleRepository(dbStub, mockCacher)
-	articles, err := mockRepo.Read(context.TODO(), mockQueryParam)
+	articles, err := mockRepo.Read(context.TODO(), mockQryBuilder)
 
 	assert.Error(t, err)
 	assert.Nil(t, articles)
 	assert.Equal(t, model.ErrInternalServer, err)
-	mockQueryParam.AssertExpectations(t)
+	mockQryBuilder.AssertExpectations(t)
 }
 
 func TestFailedGetCacheInReadArticles(t *testing.T) {
@@ -245,7 +245,7 @@ func TestFailedGetCacheInReadArticles(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub db connection", err)
 	}
 
-	mockQueryParam := new(_mockQryParam.QueryBuilder)
+	mockQueryParam := new(_mockQryBuilder.QueryBuilder)
 	mockQueryParam.On("BuildWhereClause").Return("").Once()
 
 	mockCacher := new(_mockCacher.Cacher)
@@ -287,8 +287,8 @@ func TestFailedSetCacheInReadArticles(t *testing.T) {
 	expectedQuery := "SELECT id, author, title, body, created_at FROM articles ORDER BY created_at DESC "
 	sqlMock.ExpectQuery(regexp.QuoteMeta(expectedQuery)).WillReturnRows(mockRows)
 
-	mockQueryParam := new(_mockQryParam.QueryBuilder)
-	mockQueryParam.On("BuildWhereClause").Return("").Once()
+	mockQryBuilder := new(_mockQryBuilder.QueryBuilder)
+	mockQryBuilder.On("BuildWhereClause").Return("").Once()
 
 	mockCacher := new(_mockCacher.Cacher)
 	mockCacher.On("Get", mock.AnythingOfType("string")).Return(nil, nil).Once()
@@ -296,10 +296,10 @@ func TestFailedSetCacheInReadArticles(t *testing.T) {
 		Return(model.ErrInternalServer).Once()
 
 	mockRepo := _articleRepo.NewArticleRepository(dbStub, mockCacher)
-	articles, err := mockRepo.Read(context.TODO(), mockQueryParam)
+	articles, err := mockRepo.Read(context.TODO(), mockQryBuilder)
 
 	assert.NoError(t, err)
 	assert.Len(t, articles, len(expectedArticles))
-	mockQueryParam.AssertExpectations(t)
+	mockQryBuilder.AssertExpectations(t)
 	mockCacher.AssertExpectations(t)
 }

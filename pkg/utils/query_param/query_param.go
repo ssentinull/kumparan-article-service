@@ -1,14 +1,10 @@
-package model
+package query_param
 
 import "fmt"
 
 type QueryParam struct {
 	Query  string
 	Author string
-}
-
-type QueryBuilder interface {
-	BuildWhereClause() string
 }
 
 func (qp QueryParam) BuildWhereClause() string {

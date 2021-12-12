@@ -106,7 +106,7 @@ func TestSuccessfulFetchArticles(t *testing.T) {
 
 	articles := []model.Article{article}
 	mockUsecase := new(_mock.ArticleUsecase)
-	mockUsecase.On("Get", mock.Anything, mock.AnythingOfType("model.QueryParam")).Return(articles, nil)
+	mockUsecase.On("Get", mock.Anything, mock.AnythingOfType("query_param.QueryParam")).Return(articles, nil)
 	handler := _articleHndlr.ArticleHandlerHTTP{ArticleUsecase: mockUsecase}
 	err = handler.FetchArticles(c)
 
@@ -124,7 +124,7 @@ func TestFailedUsecaseInFetchArticles(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	mockUsecase := new(_mock.ArticleUsecase)
-	mockUsecase.On("Get", mock.Anything, mock.AnythingOfType("model.QueryParam")).
+	mockUsecase.On("Get", mock.Anything, mock.AnythingOfType("query_param.QueryParam")).
 		Return(nil, model.ErrInternalServer)
 	handler := _articleHndlr.ArticleHandlerHTTP{ArticleUsecase: mockUsecase}
 	err = handler.FetchArticles(c)
