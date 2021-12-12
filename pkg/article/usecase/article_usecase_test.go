@@ -8,7 +8,7 @@ import (
 	_articleUcase "github.com/ssentinull/kumparan-article-service/pkg/article/usecase"
 	"github.com/ssentinull/kumparan-article-service/pkg/model"
 	_mockArticle "github.com/ssentinull/kumparan-article-service/pkg/model/mock/article"
-	_mockQueryBuilder "github.com/ssentinull/kumparan-article-service/pkg/model/mock/query_param"
+	_mockQryBuilder "github.com/ssentinull/kumparan-article-service/pkg/model/mock/query_builder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -52,7 +52,7 @@ func TestCreateArticle(t *testing.T) {
 
 func TestGetArticles(t *testing.T) {
 	mockRepo := new(_mockArticle.ArticleRepository)
-	mockQueryBuilder := new(_mockQueryBuilder.QueryBuilder)
+	mockQueryBuilder := new(_mockQryBuilder.QueryBuilder)
 	mockArticles := []model.Article{
 		{
 			ID: 1, Author: "test author", Title: "test title",
