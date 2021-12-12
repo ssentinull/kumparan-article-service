@@ -3,20 +3,24 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 
+	"github.com/allegro/bigcache/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/ssentinull/kumparan-article-service/pkg/model"
 	"github.com/ssentinull/kumparan-article-service/pkg/utils"
 )
 
 type articleRepository struct {
-	db *sql.DB
+	cacher model.Cacher
+	db     *sql.DB
 }
 
-func NewArticleRepository(db *sql.DB) model.ArticleRepository {
+func NewArticleRepository(db *sql.DB, c model.Cacher) model.ArticleRepository {
 	return &articleRepository{
-		db: db,
+		cacher: c,
+		db:     db,
 	}
 }
 
@@ -107,8 +111,24 @@ func (ar *articleRepository) Read(ctx context.Context, qp model.QueryBuilder) ([
 	baseQuery := "SELECT id, author, title, body, created_at FROM articles "
 	orderQuery := "ORDER BY created_at DESC "
 	filterQuery := qp.BuildWhereClause()
-
 	query := baseQuery + filterQuery + orderQuery
+
+	reply, err := ar.cacher.Get(query)
+	if err != nil && err != bigcache.ErrEntryNotFound {
+		logger.Error(err)
+
+		return nil, err
+	}
+
+	if reply != nil {
+		articles := make([]model.Article, 0)
+		if err = json.Unmarshal(reply, &articles); err != nil {
+			return nil, err
+		}
+
+		return articles, nil
+	}
+
 	rows, err := ar.db.QueryContext(ctx, query)
 	if err != nil {
 		logger.Error(err)
@@ -139,6 +159,17 @@ func (ar *articleRepository) Read(ctx context.Context, qp model.QueryBuilder) ([
 			ID: ID.Int64, Author: author.String, Title: title.String,
 			Body: body.String, CreatedAt: createdAt.Time,
 		})
+	}
+
+	bytes, err := json.Marshal(articles)
+	if err != nil {
+		logrus.Error(err)
+
+		return nil, err
+	}
+
+	if err = ar.cacher.Put(query, bytes); err != nil {
+		logger.Error()
 	}
 
 	return articles, nil

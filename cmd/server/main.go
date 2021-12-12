@@ -13,6 +13,7 @@ import (
 	_articleHndlr "github.com/ssentinull/kumparan-article-service/pkg/article/handler/http"
 	_articleRepo "github.com/ssentinull/kumparan-article-service/pkg/article/repository/postgres"
 	_articleUcase "github.com/ssentinull/kumparan-article-service/pkg/article/usecase"
+	"github.com/ssentinull/kumparan-article-service/pkg/utils/big_cache"
 )
 
 func initLogger() {
@@ -43,8 +44,10 @@ func init() {
 func main() {
 	e := echo.New()
 	db := db.NewDBConn()
+	bigCache := big_cache.NewBigCache(big_cache.Config{EvictionTime: time.Duration(5)})
+	cacher := big_cache.NewCacher(&big_cache.CacherConfig{BigCache: bigCache})
 
-	articleRepo := _articleRepo.NewArticleRepository(db)
+	articleRepo := _articleRepo.NewArticleRepository(db, cacher)
 	articleUsecase := _articleUcase.NewArticleUsecase(articleRepo)
 	_articleHndlr.NewArticleHandler(e, articleUsecase)
 
