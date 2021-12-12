@@ -27,3 +27,26 @@ func (_m *ArticleUsecase) Create(_a0 context.Context, _a1 *model.Article) error 
 
 	return r0
 }
+
+// Get provides a mock function with given fields: _a0, _a1
+func (_m *ArticleUsecase) Get(_a0 context.Context, _a1 model.QueryBuilder) ([]model.Article, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 []model.Article
+	if rf, ok := ret.Get(0).(func(context.Context, model.QueryBuilder) []model.Article); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Article)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, model.QueryBuilder) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

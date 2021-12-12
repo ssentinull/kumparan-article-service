@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -81,6 +82,52 @@ func TestFailedUsecaseInPostArticle(t *testing.T) {
 	mockUsecase.On("Create", mock.Anything, mock.AnythingOfType("*model.Article")).Return(model.ErrInternalServer)
 	handler := _articleHndlr.ArticleHandlerHTTP{ArticleUsecase: mockUsecase}
 	err = handler.PostArticle(c)
+
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	mockUsecase.AssertExpectations(t)
+}
+
+func TestSuccessfulFetchArticles(t *testing.T) {
+	params := make(url.Values)
+	params.Set("query", "science")
+	params.Set("author", "john")
+
+	rec := httptest.NewRecorder()
+	req, err := http.NewRequest(echo.GET, "/articles?"+params.Encode(), strings.NewReader(""))
+	assert.NoError(t, err)
+
+	e := echo.New()
+	c := e.NewContext(req, rec)
+
+	var article model.Article
+	err = faker.FakeData(&article)
+	assert.NoError(t, err)
+
+	articles := []model.Article{article}
+	mockUsecase := new(_mock.ArticleUsecase)
+	mockUsecase.On("Get", mock.Anything, mock.AnythingOfType("model.QueryParam")).Return(articles, nil)
+	handler := _articleHndlr.ArticleHandlerHTTP{ArticleUsecase: mockUsecase}
+	err = handler.FetchArticles(c)
+
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	mockUsecase.AssertExpectations(t)
+}
+
+func TestFailedUsecaseInFetchArticles(t *testing.T) {
+	rec := httptest.NewRecorder()
+	req, err := http.NewRequest(echo.GET, "/articles", strings.NewReader(""))
+	assert.NoError(t, err)
+
+	e := echo.New()
+	c := e.NewContext(req, rec)
+
+	mockUsecase := new(_mock.ArticleUsecase)
+	mockUsecase.On("Get", mock.Anything, mock.AnythingOfType("model.QueryParam")).
+		Return(nil, model.ErrInternalServer)
+	handler := _articleHndlr.ArticleHandlerHTTP{ArticleUsecase: mockUsecase}
+	err = handler.FetchArticles(c)
 
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)

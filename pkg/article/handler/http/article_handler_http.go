@@ -17,7 +17,24 @@ func NewArticleHandler(e *echo.Echo, au model.ArticleUsecase) {
 		ArticleUsecase: au,
 	}
 
+	e.GET("/articles", handler.FetchArticles)
 	e.POST("/articles", handler.PostArticle)
+}
+
+func (ah *ArticleHandlerHTTP) FetchArticles(c echo.Context) error {
+	queryParam := model.QueryParam{
+		Query:  c.QueryParam("query"),
+		Author: c.QueryParam("author"),
+	}
+
+	articles, err := ah.ArticleUsecase.Get(c.Request().Context(), queryParam)
+	if err != nil {
+		logrus.Error(err)
+
+		return c.JSON(model.GetErrorStatusCode(err), err.Error())
+	}
+
+	return c.JSON(http.StatusOK, articles)
 }
 
 func (ah *ArticleHandlerHTTP) PostArticle(c echo.Context) error {
